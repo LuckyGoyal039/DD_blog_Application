@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .blog-item {
+        padding-bottom: 20px;
+        list-style-type: none;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: box-shadow 0.3s ease;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        min-height: 430px;
+      }
+
+      .blog-item:hover {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .blog-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        width: 300px;
+        min-height: 72px;
+      }
+      .blogImg {
+        width: 300px;
+        height: 200px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      .contentBody {
+        padding: 0 10px;
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <li
+      class="blog-item"
+      href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
+    >
+      <a
+        href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
+        style="text-decoration: none; color: inherit"
+        class="outerContiner"
+      >
+        <img
+          class="card-img-top blogImg"
+          src="http://localhost:3000/<%= encodeURI(item.image) %>"
+          alt="Card image cap"
+        />
+        <div class="contentBody">
+          <small class="mb-1 text-muted">
+            <% const blogDate = new Date(item.updatedAt); %> <% const month =
+            blogDate.toLocaleString('default', { month: 'long' }); %> <% const
+            date = blogDate.getDate(); %> <% const year =
+            blogDate.getFullYear(); %> <%= month %> <%= date %>, <%= year %>
+          </small>
+
+          <h5 class="card-title"><%= item.blogTitle %></h5>
+          <p class="card-text blog-text"><%=item.blogText%></p>
+          <a href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
+            >Continue reading</a
+          >
+        </div>
+      </a>
+    </li>
+  </body>
+</html>

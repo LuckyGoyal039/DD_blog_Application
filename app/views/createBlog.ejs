@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Blog</title>
+    <!-- Bootstrap -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+      integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
+      crossorigin="anonymous"
+    />
+
+    <!-- Google icons -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+  </head>
+  <body>
+    <div class="d-flex justify-content-center">
+      <div style="width: 70%">
+        <div class="pt-4">
+          <% if(blogContent.dataValues){ %>
+          <h1>Update Blog</h1>
+          <% } else { %>
+          <h1>Create New Blog</h1>
+          <% } %>
+        </div>
+        <form
+          id="blogForm"
+          action="/blog/create"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <div class="form-group">
+            <label for="title"
+              ><strong style="font-size: large">Title</strong></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              aria-describedby="emailHelp"
+              placeholder="Enter Title"
+              name="title"
+              value="<%=blogContent.dataValues?.blogTitle%>"
+              required
+            />
+            <small id="emailHelp" class="form-text text-muted"
+              >Please select the title that suits the most</small
+            >
+          </div>
+          <div class="form-group">
+            <label for="content"
+              ><strong style="font-size: large">Content</strong></label
+            >
+            <textarea
+              class="form-control"
+              id="content"
+              rows="10"
+              placeholder="Let's start..."
+              name="content"
+              required
+            >
+<%=blogContent.dataValues?.blogText%>
+          </textarea
+            >
+          </div>
+
+          <div class="d-flex justify-content-between pb-2">
+            <label for="categoryBySelect"
+              ><strong style="font-size: large">Select Category: </strong>
+            </label>
+            <div
+              id="newCategory"
+              class="btn btn-primary"
+              onclick="handleNewCategory()"
+            >
+              +New
+            </div>
+          </div>
+          <input
+            type="text"
+            class="form-control"
+            id="categoryByInput"
+            aria-describedby="categoryHelp"
+            placeholder="Enter Category"
+            name="category"
+            style="display: none"
+          />
+          <select class="form-control" id="categoryBySelect">
+            <% categories.forEach(function(item) { %>
+            <option <% if(blogContent && blogContent.dataValues?.category === item.category) { %> selected <% } %>><%=item.category%></option>
+            <% }); %>
+          </select>
+          <div class="form-group">
+            <label for="imageFile"
+              ><strong style="font-size: large"> Select Image for Blog </strong>
+            </label>
+            <input
+              type="file"
+              class="form-control-file"
+              id="imageFile"
+              name="imageFile"
+            />
+          </div>
+
+          <button class="btn btn-secondary">
+            <a href="/home" style="color: #ffff">Cancel</a>
+          </button>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+    </div>
+    <!-- Bootstrap -->
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
+    <!-- custom js -->
+    <script>
+      function handleNewCategory() {
+        var button = document.getElementById("newCategory");
+        let categorySelect = document.getElementById("categoryBySelect");
+        let categoryInput = document.getElementById("categoryByInput");
+        let cancelCat = document.getElementById("cancelCategory");
+        if (button) {
+          button.textContent = "Cancel";
+          button.className = "btn btn-secondary";
+          button.id = "cancelCategory";
+          categorySelect.style.display = "none";
+          categoryInput.style.display = "block";
+        } else {
+          cancelCat.textContent = "+New";
+          cancelCat.className = "btn btn-primary";
+          categorySelect.style.display = "block";
+          categoryInput.style.display = "none";
+          cancelCat.id = "newCategory";
+        }
+      }
+      document
+        .getElementById("blogForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const form = event.target;
+          const title = form.elements["title"].value;
+          const content = form.elements["content"].value;
+          const imgFile = document.getElementById("imageFile").files[0];
+          let category;
+          if (
+            document.getElementById("categoryBySelect").style.display !== "none"
+          ) {
+            category = document.getElementById("categoryBySelect").value;
+          } else {
+            category = document.getElementById("categoryByInput").value;
+          }
+
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("content", content);
+          formData.append("category", category);
+          formData.append("imageFile", imgFile);
+          const checkBlog=<%-JSON.stringify(blogContent.dataValues)%>;
+          if(checkBlog){
+            formData.append("blogId", checkBlog.blog_id)
+          }
+
+          fetch("/blog/create", {
+            method: "POST",
+            body: formData, // JSON.stringify not working
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log("Response data:", data);
+
+              if (data?.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+    </script>
+  </body>
+</html>

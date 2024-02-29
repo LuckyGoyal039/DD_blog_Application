@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blogger.com</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
+      crossorigin="anonymous"
+    />
+    <link rel="icon" type="image/x-icon" href="favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;500&family=Roboto+Slab:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class="bg-light" style="font-family: 'Roboto Slab', serif">
+    <div class="w-100 d-flex flex-column">
+      <div class="w-100 d-flex justify-content-center" style="margin-top: 80px">
+        <div class="container my-4">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th scope="col">S.no</th>
+                <th scope="col">UserName</th>
+                <th scope="col">Email</th>
+                <th scope="col">user</th>
+                <th scope="col">Delete User</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% users.forEach((user, index)=> { %>
+              <tr>
+                <th scope="row"><%= index + 1 %></th>
+                <td><%= user.userName %></td>
+                <td><%= user.email %></td>
+                <td>
+                  <% if ((user?.isAdmin)) { %>
+                  <a
+                    href="changeusertype/?id=<%= encodeURIComponent(user.user_id)%>"
+                    class="btn btn-primary"
+                    >Admin</a
+                  >
+                  <% } else { %>
+                  <a
+                    href="changeusertype/?id=<%= encodeURIComponent(user.user_id)%>"
+                    class="btn btn-secondary"
+                    >Make Admin</a
+                  >
+                  <% } %>
+                </td>
+                <td>
+                  <a
+                    href="deteteuser/?id=<%= encodeURIComponent(user.user_id)%>"
+                    class="btn btn-danger delete-btn"
+                    >Delete</a
+                  >
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Get all delete buttons
+      const deleteButtons = document.querySelectorAll(".delete-btn");
+
+      // Add event listener to each delete button
+      deleteButtons.forEach((button) => {
+        button.addEventListener("click", function (event) {
+          // Prevent the default behavior of the link
+          event.preventDefault();
+
+          // Show confirmation dialog
+          const confirmed = confirm(
+            "Are you sure you want to delete this user?"
+          );
+
+          // If user confirms, proceed with deletion
+          if (confirmed) {
+            window.location.href = button.getAttribute("href");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
