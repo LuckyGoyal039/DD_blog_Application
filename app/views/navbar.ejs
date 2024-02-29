@@ -14,6 +14,7 @@
           <li class="nav-item active">
             <a class="nav-link" href="/home">Home </a>
           </li>
+          <% if(categories.length>0) { %>
           <li class="nav-item dropdown">
             <a
               class="nav-link dropdown-toggle"
@@ -37,7 +38,7 @@
               <% }); %>
             </div>
           </li>
-          <%if(admin) { %>
+          <% }%> <%if(admin) { %>
           <li class="nav-item active">
             <a class="nav-link" href="/admin/manageuser">Manage User</a>
           </li>
@@ -50,6 +51,7 @@
           <%}%>
         </ul>
         <div class="d-flex">
+          <% if(categories.length>0) { %>
           <form class="form-inline my-2 my-lg-0">
             <input
               class="form-control mr-sm-2"
@@ -64,6 +66,7 @@
               Search
             </button>
           </form>
+          <%}%>
           <div class="user">
             <%if(isAuthenticate) { %>
             <div class="adminOptions d-flex justify-content-center">

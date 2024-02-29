@@ -12,6 +12,7 @@ const Roles = require("./app/models/roles");
 const Permissions = require("./app/models/permission");
 const AuditLog = require("./app/models/auditLogs");
 require("dotenv").config();
+const flash = require("connect-flash");
 
 const app = express();
 app.set("view engine", "ejs");
@@ -33,6 +34,7 @@ app.use(
   })
 );
 
+app.use(flash());
 app.use("/", routes);
 
 // sync user table

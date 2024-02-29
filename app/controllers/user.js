@@ -2,6 +2,7 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
+const flash = require("connect-flash");
 
 const userSignUp = async function (req, res) {
   const { username, email, password } = req.body;
@@ -13,7 +14,10 @@ const userSignUp = async function (req, res) {
   try {
     const isUser = await User.findOne({ where: { email: email } });
     if (isUser) {
-      return res.status(400).json({ message: "User already exists" });
+      req.flash("signupError", "Email already exit");
+      return res.json({
+        redirectUrl: "/user/signup",
+      });
     }
     // saltRounds not working
     // const saltRounds = process.env.SALT_ROUNDS;
@@ -39,9 +43,10 @@ const userSignUp = async function (req, res) {
   } catch (error) {
     req.session.isAuthenticate = false;
     console.log("Error during sign-up", error);
-    return res
-      .status(400)
-      .json({ message: "Something went wrong Error during sign-up" });
+    req.flash("signupError", "Something went wrong");
+    return res.json({
+      redirectUrl: "/user/signup",
+    });
   }
 };
 
@@ -52,11 +57,15 @@ const userSignIn = async function (req, res) {
 
     if (!isUser || !(await bcrypt.compare(password, isUser.password))) {
       req.session.isAuthenticate = false;
-      return res.status(400).json({ message: "Invalid email or password" });
+      req.flash("error", "Invalid email or password");
+      return res.json({
+        redirectUrl: "/user/login",
+      });
     }
     req.session.isAuthenticate = true;
     req.session.admin = isUser.isAdmin;
     req.session.user = isUser;
+    req.flash("message", "Successs");
     res.status(200).json({
       username: isUser.userName,
       email: isUser.email,
@@ -64,9 +73,11 @@ const userSignIn = async function (req, res) {
     });
   } catch (error) {
     req.session.isAuthenticate = false;
-    return res
-      .status(400)
-      .json({ message: "Something went wrong Error during sign-in" });
+    consle.log("user login error", error);
+    req.flash("error", "Something went wrong");
+    return res.json({
+      redirectUrl: "/user/login",
+    });
   }
 };
 

@@ -1,5 +1,4 @@
 const express = require("express");
-
 const { userSignIn, userSignUp } = require("../app/controllers/user");
 
 const router = express.Router();
@@ -10,8 +9,7 @@ router.get("/login", (req, res) => {
   if (user) {
     res.redirect("/");
   }
-
-  res.render("login");
+  res.render("login", { messages: req.flash("error") });
 });
 
 router.get("/logout", (req, res) => {
@@ -28,7 +26,7 @@ router.get("/signup", (req, res) => {
   if (user) {
     res.redirect("/");
   }
-  res.render("signup");
+  res.render("signup", { messages: req.flash("signupError") });
 });
 router.post("/signup", userSignUp);
 

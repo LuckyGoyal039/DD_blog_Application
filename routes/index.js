@@ -32,7 +32,9 @@ router.post("/admin/createUser", userSignUp);
 router.get("/admin/manageuser", async (req, res) => {
   if (req.session?.admin) {
     const users = await getUsers(req.session?.user?.user_id);
-    res.render("manageUser", { users });
+    const admin = req.session?.admin || false;
+    const isAuthenticate = req.session?.isAuthenticate || false;
+    res.render("manageUser", { categories: [], users, admin, isAuthenticate });
   } else {
     res.redirect("/404");
   }

@@ -22,7 +22,7 @@
     <div class="d-flex justify-content-center">
       <div style="width: 70%">
         <div class="pt-4">
-          <% if(blogContent.dataValues){ %>
+          <% if(blogContent?.dataValues){ %>
           <h1>Update Blog</h1>
           <% } else { %>
           <h1>Create New Blog</h1>
@@ -45,7 +45,7 @@
               aria-describedby="emailHelp"
               placeholder="Enter Title"
               name="title"
-              value="<%=blogContent.dataValues?.blogTitle%>"
+              value="<%=blogContent?.dataValues?.blogTitle%>"
               required
             />
             <small id="emailHelp" class="form-text text-muted"
@@ -64,7 +64,7 @@
               name="content"
               required
             >
-<%=blogContent.dataValues?.blogText%>
+<%=blogContent?.dataValues?.blogText%>
           </textarea
             >
           </div>
@@ -92,7 +92,7 @@
           />
           <select class="form-control" id="categoryBySelect">
             <% categories.forEach(function(item) { %>
-            <option <% if(blogContent && blogContent.dataValues?.category === item.category) { %> selected <% } %>><%=item.category%></option>
+            <option <% if(blogContent && blogContent?.dataValues?.category === item.category) { %> selected <% } %>><%=item.category%></option>
             <% }); %>
           </select>
           <div class="form-group">
@@ -174,7 +174,7 @@
           formData.append("content", content);
           formData.append("category", category);
           formData.append("imageFile", imgFile);
-          const checkBlog=<%-JSON.stringify(blogContent.dataValues)%>;
+          const checkBlog=<%-JSON.stringify(blogContent?.dataValues)%>;
           if(checkBlog){
             formData.append("blogId", checkBlog.blog_id)
           }

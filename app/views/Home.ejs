@@ -28,10 +28,7 @@
     <title>Blog Application</title>
   </head>
   <body>
-    <!-- navbar -->
     <%- include('navbar', {categories, isAuthenticate, admin})%>
-    <!-- Sidebar -->
-    <!-- <%- include('sidebar')%> -->
 
     <div class="frame">
       <% if (loading) { %> <%- include('spinner')%> <% } else if

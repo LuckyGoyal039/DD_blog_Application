@@ -214,7 +214,6 @@ async function getBlogs(req, res) {
       })
     );
     loading = false;
-    console.log("isAdmin ", req.session.admin);
     res.render("home", {
       isAuthenticate,
       blogList: BlogDetails,
@@ -247,8 +246,9 @@ async function checkAuthBlog(user, id) {
 
 async function getAuditLogs(req, res) {
   const data = await AuditLog.findAll();
-
-  res.render("auditLogs", { data });
+  const admin = req.session?.admin || false;
+  const isAuthenticate = req.session?.isAuthenticate || false;
+  res.render("auditLogs", { categories: [], data, admin, isAuthenticate });
 }
 async function getBlogDetails(req, res) {
   const categoryPromise = await Blogs.findAll({
