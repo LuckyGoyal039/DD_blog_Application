@@ -36,6 +36,8 @@
     <div class="w-100 d-flex flex-column">
       <div class="w-100 d-flex justify-content-center" style="margin-top: 80px">
         <div class="container my-4">
+          <% if(data.length>0){%>
+
           <table class="table table-striped">
             <thead>
               <tr>
@@ -63,6 +65,11 @@
               <% }); %>
             </tbody>
           </table>
+          <%} else {%>
+          <div class="d-flex justify-content-center">
+            <h1>No Data Present!!</h1>
+          </div>
+          <%}%>
         </div>
       </div>
     </div>

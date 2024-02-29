@@ -62,3 +62,36 @@ sequelize
 
 // issues
 // why all the models not sync without import
+
+
+// title
+// category ajax
+// create tags
+// summary  styling ck editor
+// table: deserialize, id value
+
+// feature image
+// description
+
+
+// save preview page
+// comments on blog
+
+// blog card: image, category as ribbun on image, 
+// gravitar
+
+
+
+// comments
+
+// any user login or not
+
+// name
+
+// text field xss/ sql inject free
+
+// sprite image
+// capta image
+
+// save
+// validate by user who write the blog

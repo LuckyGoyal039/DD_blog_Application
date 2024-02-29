@@ -24,7 +24,6 @@ async function createBlog(req, res) {
         const uploadDir = path.join(__dirname, "..", "..", "uploads");
         const imagePath = path.join(uploadDir, imageName);
         fs.unlink(imagePath, (err) => {
-          if (err) throw err;
           console.log("path/file.txt was deleted");
         });
       }
@@ -57,15 +56,16 @@ async function createBlog(req, res) {
         "Create"
       );
     }
-    res.status(200).json({
-      message: "Blog created successfully",
-      redirectUrl: "/home",
+    // req.flash("error", "Invalid email or password");
+    return res.json({
+      redirectUrl: "/",
     });
   } catch (error) {
     console.log("create blog error", error);
-    res
-      .status(500)
-      .json({ errMess: "something went wrong. Unable to create blog" });
+    req.flash("createBlogError", "Somethig went wrong!! unable to create blog");
+    return res.json({
+      redirectUrl: "/blog/create",
+    });
   }
 }
 
@@ -161,7 +161,7 @@ async function getBlogs(req, res) {
   const filterQuery = req.query.filter || "All";
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 6;
+    const limit = 8;
     const offset = (page - 1) * limit;
     const whereCondition =
       filterQuery === "All" || filterQuery === ""
@@ -266,6 +266,7 @@ async function getBlogDetails(req, res) {
   res.render("createBlog", {
     categories: categoryPromise,
     blogContent,
+    messages: req.flash("createBlogError"),
   });
 }
 module.exports = {

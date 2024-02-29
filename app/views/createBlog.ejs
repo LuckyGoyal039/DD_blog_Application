@@ -20,6 +20,16 @@
   </head>
   <body>
     <div class="d-flex justify-content-center">
+      <% if (messages.length > 0) { %>
+        <p
+          class="text-danger text-center"
+          style="transition: opacity 0.5s ease-in-out"
+          role="alert"
+          id="flashMessage"
+        >
+          <% messages.forEach(message => { %> <%= message %> <% }); %>
+        </p>
+        <% } %>
       <div style="width: 70%">
         <div class="pt-4">
           <% if(blogContent?.dataValues){ %>
@@ -133,7 +143,7 @@
     <!-- custom js -->
     <script>
       function handleNewCategory() {
-        var button = document.getElementById("newCategory");
+                var button = document.getElementById("newCategory");
         let categorySelect = document.getElementById("categoryBySelect");
         let categoryInput = document.getElementById("categoryByInput");
         let cancelCat = document.getElementById("cancelCategory");
@@ -144,7 +154,7 @@
           categorySelect.style.display = "none";
           categoryInput.style.display = "block";
         } else {
-          cancelCat.textContent = "+New";
+                    cancelCat.textContent = "+New";
           cancelCat.className = "btn btn-primary";
           categorySelect.style.display = "block";
           categoryInput.style.display = "none";
@@ -192,7 +202,9 @@
               }
             })
             .catch((error) => {
-              console.error("Error:", error);
+              if (data?.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              }
             });
         });
     </script>

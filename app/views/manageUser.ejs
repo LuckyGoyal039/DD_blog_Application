@@ -37,6 +37,7 @@
     <div class="w-100 d-flex flex-column">
       <div class="w-100 d-flex justify-content-center" style="margin-top: 80px">
         <div class="container my-4">
+          <% if(users.length>0){%>
           <table class="table table-striped">
             <thead>
               <tr>
@@ -79,6 +80,11 @@
               <% }); %>
             </tbody>
           </table>
+          <%} else {%>
+          <div class="d-flex justify-content-center">
+            <h1>No User!! </h1>
+          </div>
+          <%} %>
         </div>
       </div>
     </div>

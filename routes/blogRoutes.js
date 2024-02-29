@@ -21,7 +21,8 @@ router.get("/", async (req, res) => {
   }
   const isAuthenticate =
     (await checkAuthBlog(req.session.user, req.query.id)) || false;
-  res.render("blog", { blogData, isAuthenticate });
+  const admin = req.session?.admin || false;
+  res.render("blog", { categories: [], blogData, isAuthenticate, admin });
 });
 
 router.get("/create", isUser(), getBlogDetails);
