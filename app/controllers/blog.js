@@ -52,9 +52,9 @@ async function createBlog(req, res) {
     });
     await updateAuditLogs(userEmail, newFile.blog_id, "Create");
 
-    req.flash("createBlogSuccess", "Blog Created");
+    req.flash("createBlogSuccess", "Blog Created Successfully");
     return res.json({
-      redirectUrl: "/",
+      redirectUrl: "/home",
     });
   } catch (error) {
     console.log("create blog error", error);
@@ -66,8 +66,8 @@ async function createBlog(req, res) {
 }
 
 async function blogDetails(id) {
-  const decryptedId = decrypt(id);
-  try {
+    const decryptedId = decrypt(id);
+    try {
     const blogPromise = await Blogs.findOne({
       where: { blog_id: decryptedId },
     });
@@ -104,8 +104,8 @@ async function updateAuditLogs(userEmail, blogId, action) {
 
 async function deleteBlog(req, res) {
   try {
-    const blogId = decrypt(req.query.id);
-    const userEmail = req.session.user.email;
+        const blogId = decrypt(req.query.id);
+        const userEmail = req.session.user.email;
     const post = await Blogs.findByPk(blogId);
 
     if (!post) {
@@ -236,8 +236,8 @@ async function getBlogs(req, res) {
 
 async function checkAuthBlog(user, id) {
   try {
-    const decryptId = decrypt(id);
-    const blog = await Blogs.findOne({
+        const decryptId = decrypt(id);
+        const blog = await Blogs.findOne({
       where: { blog_id: decryptId },
     });
     if (!blog) return false;
@@ -261,7 +261,9 @@ async function getBlogDetails(req, res) {
       [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
     ],
   });
-  const id = decrypt(req.query.id);
+  let id;
+  if (req.query.id) id = decrypt(req.query.id);
+
   let blogContent = null;
   let result = id ? await Blogs.findOne({ where: { blog_id: id } }) : undefined;
   if (result) {
