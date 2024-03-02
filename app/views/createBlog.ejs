@@ -20,16 +20,6 @@
   </head>
   <body>
     <div class="d-flex justify-content-center">
-      <% if (messages.length > 0) { %>
-        <p
-          class="text-danger text-center"
-          style="transition: opacity 0.5s ease-in-out"
-          role="alert"
-          id="flashMessage"
-        >
-          <% messages.forEach(message => { %> <%= message %> <% }); %>
-        </p>
-        <% } %>
       <div style="width: 70%">
         <div class="pt-4">
           <% if(blogContent?.dataValues){ %>
@@ -79,32 +69,16 @@
             >
           </div>
 
-          <div class="d-flex justify-content-between pb-2">
-            <label for="categoryBySelect"
+          <div class="pb-2">
+            <label for="category"
               ><strong style="font-size: large">Select Category: </strong>
             </label>
-            <div
-              id="newCategory"
-              class="btn btn-primary"
-              onclick="handleNewCategory()"
-            >
-              +New
-            </div>
-          </div>
-          <input
-            type="text"
-            class="form-control"
-            id="categoryByInput"
-            aria-describedby="categoryHelp"
-            placeholder="Enter Category"
-            name="category"
-            style="display: none"
-          />
-          <select class="form-control" id="categoryBySelect">
+            <input list="category" name="category" id="category"  class="form-control">
+          <datalist id="category">
             <% categories.forEach(function(item) { %>
             <option <% if(blogContent && blogContent?.dataValues?.category === item.category) { %> selected <% } %>><%=item.category%></option>
             <% }); %>
-          </select>
+          </datalist>
           <div class="form-group">
             <label for="imageFile"
               ><strong style="font-size: large"> Select Image for Blog </strong>
@@ -142,71 +116,41 @@
     ></script>
     <!-- custom js -->
     <script>
-      function handleNewCategory() {
-                var button = document.getElementById("newCategory");
-        let categorySelect = document.getElementById("categoryBySelect");
-        let categoryInput = document.getElementById("categoryByInput");
-        let cancelCat = document.getElementById("cancelCategory");
-        if (button) {
-          button.textContent = "Cancel";
-          button.className = "btn btn-secondary";
-          button.id = "cancelCategory";
-          categorySelect.style.display = "none";
-          categoryInput.style.display = "block";
-        } else {
-                    cancelCat.textContent = "+New";
-          cancelCat.className = "btn btn-primary";
-          categorySelect.style.display = "block";
-          categoryInput.style.display = "none";
-          cancelCat.id = "newCategory";
+      document.getElementById("blogForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const title = form.elements["title"].value;
+    const content = form.elements["content"].value;
+    const imgFile = document.getElementById("imageFile").files[0];
+    const category = document.getElementById("category").value;
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    formData.append("category", category);
+    formData.append("imageFile", imgFile);
+    const checkBlog = <%=JSON.stringify(blogContent?.dataValues)%>;
+
+    if (checkBlog) {
+        formData.append("blogId", checkBlog.blog_id);
+    }
+
+    fetch("/blog/create", {
+        method: "POST",
+        body: formData, // JSON.stringify not working
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        console.log("Response data:", data);
+        if (data.redirectUrl) {
+            window.location.href = data.redirectUrl;
         }
-      }
-      document
-        .getElementById("blogForm")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+    });
+});
 
-          const form = event.target;
-          const title = form.elements["title"].value;
-          const content = form.elements["content"].value;
-          const imgFile = document.getElementById("imageFile").files[0];
-          let category;
-          if (
-            document.getElementById("categoryBySelect").style.display !== "none"
-          ) {
-            category = document.getElementById("categoryBySelect").value;
-          } else {
-            category = document.getElementById("categoryByInput").value;
-          }
-
-          const formData = new FormData();
-          formData.append("title", title);
-          formData.append("content", content);
-          formData.append("category", category);
-          formData.append("imageFile", imgFile);
-          const checkBlog=<%-JSON.stringify(blogContent?.dataValues)%>;
-          if(checkBlog){
-            formData.append("blogId", checkBlog.blog_id)
-          }
-
-          fetch("/blog/create", {
-            method: "POST",
-            body: formData, // JSON.stringify not working
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              console.log("Response data:", data);
-
-              if (data?.redirectUrl) {
-                window.location.href = data.redirectUrl;
-              }
-            })
-            .catch((error) => {
-              if (data?.redirectUrl) {
-                window.location.href = data.redirectUrl;
-              }
-            });
-        });
     </script>
   </body>
 </html>

@@ -7,56 +7,52 @@ const AuditLog = require("../models/auditLogs");
 const fs = require("fs");
 const path = require("path");
 
-async function createBlog(req, res) {
+async function updateBlog(req, res) {
   const { title, content, category } = req.body;
   const userId = req.session.user.user_id;
   const userEmail = req.session.user.email;
+  const decryptedId = decrypt(req.body?.blogId);
+  const blogData = await Blogs.findOne({
+    where: {
+      blog_id: decryptedId,
+    },
+  });
+  if (req.file?.filename && blogData.dataValues.image !== "noImage.jpg") {
+    const imageName = blogData.dataValues.image;
+    const uploadDir = path.join(__dirname, "..", "..", "uploads");
+    const imagePath = path.join(uploadDir, imageName);
+    fs.unlink(imagePath, (err) => {
+      console.log("path/file.txt was deleted");
+    });
+  }
+  const updatedImage = req.file?.filename || blogData.image;
+
+  blogData.set({
+    blogTitle: title,
+    blogText: content,
+    category: category,
+    image: updatedImage,
+  });
+  await blogData.save();
+  await updateAuditLogs(userEmail, blogData.blog_id, "Update");
+}
+
+async function createBlog(req, res) {
   try {
-    if (req.body?.blogId) {
-      const decryptedId = decrypt(req.body.blogId);
-      const blogData = await Blogs.findOne({
-        where: {
-          blog_id: decryptedId,
-        },
-      });
-      if (req.file?.filename && blogData.dataValues.image !== "noImage.jpg") {
-        const imageName = blogData.dataValues.image;
-        const uploadDir = path.join(__dirname, "..", "..", "uploads");
-        const imagePath = path.join(uploadDir, imageName);
-        fs.unlink(imagePath, (err) => {
-          console.log("path/file.txt was deleted");
-        });
-      }
-      const updatedImage = req.file?.filename || blogData.image;
+    const { title, content, category } = req.body;
+    const userId = req.session.user.user_id;
+    const userEmail = req.session.user.email;
+    const image = req.file?.filename || "noImage.jpg";
+    const newFile = await Blogs.create({
+      blogTitle: title,
+      blogText: content,
+      category: category,
+      userId: userId,
+      image: image,
+    });
+    await updateAuditLogs(userEmail, newFile.blog_id, "Create");
 
-      blogData.set({
-        blogTitle: title,
-        blogText: content,
-        category: category,
-        image: updatedImage,
-      });
-      await blogData.save();
-      const auditRes = await updateAuditLogs(
-        userEmail,
-        blogData.blog_id,
-        "Update"
-      );
-    } else {
-      const newFile = await Blogs.create({
-        blogTitle: title,
-        blogText: content,
-        category: category,
-        userId: userId,
-        image: req.file?.filename || "noImage.jpg",
-      });
-
-      const auditRes = await updateAuditLogs(
-        userEmail,
-        newFile.blog_id,
-        "Create"
-      );
-    }
-    // req.flash("error", "Invalid email or password");
+    req.flash("createBlogSuccess", "Blog Created");
     return res.json({
       redirectUrl: "/",
     });
@@ -133,8 +129,12 @@ async function deleteBlog(req, res) {
     res.status(500).json({ error: "Error deleting blog" });
   }
 }
-const iv = crypto.randomBytes(16);
-const key = crypto.randomBytes(32);
+const iv = Buffer.from("0123456789abcdef0123456789abcdef", "hex");
+const key = Buffer.from(
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "hex"
+);
+
 const algorithm = "aes-256-cbc";
 // encryption
 function encrypt(text) {
@@ -155,73 +155,78 @@ function decrypt(encryptedText) {
   }
 }
 
+async function fetchBlogData(filterQuery, page = 1, limit = 8) {
+  const offset = (page - 1) * limit;
+
+  const whereCondition = filterQuery
+    ? {
+        [Op.or]: [
+          { category: { [Op.like]: `%${filterQuery}%` } },
+          { blogTitle: { [Op.like]: `%${filterQuery}%` } },
+        ],
+      }
+    : {};
+  const allBlogs = await Blogs.findAll({
+    where: whereCondition,
+    limit: limit,
+    offset: offset,
+  });
+  const BlogDetails = await Promise.all(
+    allBlogs.map(async (ele, ind) => {
+      let user = await User.findOne({ where: { user_id: ele.userId } });
+      ele.dataValues.blog_id = encrypt(`${ele.dataValues.blog_id}`);
+      return { ...ele.dataValues, author: user.userName };
+    })
+  );
+  return BlogDetails;
+}
+
+async function fetchCategoryData() {
+  return await Blogs.findAll({
+    attributes: [
+      [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
+    ],
+  });
+}
+
+async function totalBlogs(filterQuery) {
+  const whereCondition = filterQuery
+    ? {
+        [Op.or]: [
+          { category: { [Op.like]: `%${filterQuery}%` } },
+          { blogTitle: { [Op.like]: `%${filterQuery}%` } },
+        ],
+      }
+    : {};
+  return await Blogs.count({ where: whereCondition });
+}
+
 async function getBlogs(req, res) {
-  let isAuthenticate = req.session.isAuthenticate;
-  let loading = true;
-  const filterQuery = req.query.filter || "All";
   try {
+    let isAuthenticate = req.session.isAuthenticate;
+    let loading = true;
+    let filterQuery = req.query?.filter;
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
-    const offset = (page - 1) * limit;
-    const whereCondition =
-      filterQuery === "All" || filterQuery === ""
-        ? {}
-        : {
-            [Op.or]: [
-              {
-                category: {
-                  [Op.like]: `%${filterQuery}%`,
-                },
-              },
-              {
-                blogTitle: {
-                  [Op.like]: `%${filterQuery}%`,
-                },
-              },
-            ],
-          };
-    const countPromise = Blogs.count({ where: whereCondition });
-    const allBlogsPromise =
-      filterQuery === "All" || filterQuery === ""
-        ? Blogs.findAll({
-            limit: limit,
-            offset: offset,
-          })
-        : Blogs.findAll({
-            where: whereCondition,
-            limit: limit,
-            offset: offset,
-          });
-    // category List/
-    const categoryPromise = Blogs.findAll({
-      attributes: [
-        [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
-      ],
-    });
+    if (filterQuery === "All") filterQuery = undefined;
+    // Get Blog Data
+    const BlogDetails = await fetchBlogData(filterQuery, page, limit);
+    // get category List
+    const allCategory = await fetchCategoryData();
+    // get blog count
+    const blogCount = await totalBlogs(filterQuery);
+    const totalPages = Math.ceil(blogCount / limit);
 
-    // Wait for all asynchronous operations to complete
-    const [count, allBlogs, categories] = await Promise.all([
-      countPromise,
-      allBlogsPromise,
-      categoryPromise,
-    ]);
-    const totalPages = Math.ceil(count / limit);
-    const BlogDetails = await Promise.all(
-      allBlogs.map(async (ele, ind) => {
-        let user = await User.findOne({ where: { user_id: ele.userId } });
-        ele.dataValues.blog_id = encrypt(`${ele.dataValues.blog_id}`);
-        return { ...ele.dataValues, author: user.userName };
-      })
-    );
     loading = false;
     res.render("home", {
       isAuthenticate,
       blogList: BlogDetails,
       loading: loading,
-      categories: categories,
+      categories: allCategory,
       currentPage: page,
       totalPages: totalPages,
       admin: req.session?.admin || false,
+      messages: "",
     });
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -236,7 +241,7 @@ async function checkAuthBlog(user, id) {
       where: { blog_id: decryptId },
     });
     if (!blog) return false;
-    const result = blog.userId === user?.user_id || user.isAdmin;
+    const result = blog.userId === user?.user_id || user?.isAdmin;
     return result;
   } catch (error) {
     console.error("Error checking blog authorization:", error);
