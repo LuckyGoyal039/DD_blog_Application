@@ -6,18 +6,13 @@ const flash = require("connect-flash");
 
 const userSignUp = async function (req, res) {
   const { username, email, password } = req.body;
-  const adminBool = req.session.admin
-    ? req.body?.userType === "admin"
-      ? true
-      : false
-    : false;
+  const adminBool = req.session.admin && req.body?.userType === "admin";
   try {
     const isUser = await User.findOne({ where: { email: email } });
     if (isUser) {
-      req.flash("signupError", "Email already exit");
-      return res.json({
-        redirectUrl: "/user/signup",
-      });
+      req.flash("error", "User already exit ");
+      
+      return res.redirect(`${req.originalUrl}`);
     }
     // saltRounds not working
     // const saltRounds = process.env.SALT_ROUNDS;
@@ -28,25 +23,16 @@ const userSignUp = async function (req, res) {
       password: hashPassword,
       isAdmin: adminBool,
     });
-    if (req.session?.user) {
-      return res.status(200).json({ redirectUrl: "/home" });
-    }
-
     req.session.isAuthenticate = true;
     req.session.admin = newUser.isAdmin;
     req.session.user = newUser;
-    res.status(200).json({
-      username: newUser.userName,
-      email: newUser.email,
-      redirectUrl: "/home",
-    });
+    req.flash("success", "Signup successfully");
+    return res.redirect("/home");
   } catch (error) {
     req.session.isAuthenticate = false;
     console.log("Error during sign-up", error);
-    req.flash("signupError", "Something went wrong");
-    return res.json({
-      redirectUrl: "/user/signup",
-    });
+    req.flash("error", "Unable to signup");
+    return res.redirect(`${req.originalUrl}`);
   }
 };
 
@@ -65,16 +51,13 @@ const userSignIn = async function (req, res) {
     req.session.isAuthenticate = true;
     req.session.admin = isUser.isAdmin;
     req.session.user = isUser;
-    req.flash("message", "Successs");
-    res.status(200).json({
-      username: isUser.userName,
-      email: isUser.email,
-      redirectUrl: "/home",
-    });
+    req.flash("success", "SignIn Successfully");
+
+    return res.redirect("/home");
   } catch (error) {
     req.session.isAuthenticate = false;
     consle.log("user login error", error);
-    req.flash("error", "Something went wrong");
+    req.flash("error", "Something went wrong! unable to signIn");
     return res.json({
       redirectUrl: "/user/login",
     });
@@ -104,9 +87,11 @@ async function changeUserType(req, res) {
       isAdmin: !userData.isAdmin,
     });
     await userData.save();
+    req.flash("success", "Sucess");
     res.redirect("/admin/manageuser");
   } catch (error) {
     console.log("unable to change user type", error);
+    req.flash("error", "Something went wrong");
     res.status(400).json("Someting went wrong");
   }
 }
@@ -114,10 +99,12 @@ async function userDelete(req, res) {
   try {
     const user = await User.findByPk(req.query.id);
     await user.destroy();
+    req.flash("success", "User deleted successfully");
     res.redirect("/admin/manageuser");
   } catch (error) {
     console.log("unable to delete user", error);
-    res.status(400).json("something went wrong");
+    req.flash("error", "Something went wrong. unable to delete user");
+    res.redirect("/admin/manageuser");
   }
 }
 module.exports = {

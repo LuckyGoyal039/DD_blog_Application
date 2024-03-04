@@ -22,11 +22,11 @@
     <div class="d-flex justify-content-center">
       <div style="width: 70%">
         <div class="pt-4">
-          <h1>Create New Blog</h1>
+          <h1>Update Blog</h1>
         </div>
         <form
           id="blogForm"
-          action="/blog/create"
+          action="/blog/update"
           method="POST"
           enctype="multipart/form-data"
         >
@@ -41,6 +41,7 @@
               aria-describedby="emailHelp"
               placeholder="Enter Title"
               name="title"
+              value="<%=blogContent?.dataValues?.blogTitle%>"
               required
             />
             <small id="emailHelp" class="form-text text-muted"
@@ -58,19 +59,29 @@
               placeholder="Let's start..."
               name="content"
               required
-            ></textarea>
+            >
+<%=blogContent?.dataValues?.blogText%>
+          </textarea
+            >
           </div>
-
           <div class="pb-2">
             <label for="category"
               ><strong style="font-size: large">Select Category: </strong>
             </label>
-            <input list="category" name="category" id="category"  class="form-control" required>
-          <datalist id="category">
-            <% categories.forEach(function(item) { %>
-            <option ><%=item.category%></option>
-            <% }); %>
-          </datalist>
+            <input
+              list="category"
+              name="category"
+              id="category"
+              class="form-control"
+              value="<%= blogContent?.dataValues?.category%>"
+              required
+            />
+            <datalist id="category">
+              <% categories.forEach(function(item) { %>
+              <option value="<%=item.category%>"></option>
+              <% }); %>
+            </datalist>
+          </div>
           <div class="form-group">
             <label for="imageFile"
               ><strong style="font-size: large"> Select Image for Blog </strong>
@@ -80,14 +91,13 @@
               class="form-control-file"
               id="imageFile"
               name="imageFile"
-              required
             />
           </div>
 
           <button class="btn btn-secondary">
             <a href="/home" style="color: #ffff">Cancel</a>
           </button>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Update</button>
         </form>
       </div>
     </div>
@@ -109,35 +119,40 @@
     ></script>
     <!-- custom js -->
     <script>
-      document.getElementById("blogForm").addEventListener("submit", function (event) {
-    event.preventDefault();
+      document
+        .getElementById("blogForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
 
-    const form = event.target;
-    const title = form.elements["title"].value;
-    const content = form.elements["content"].value;
-    const imgFile = document.getElementById("imageFile").files[0];
-    const category = document.getElementById("category").value;
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-    formData.append("category", category);
-    formData.append("imageFile", imgFile);
+          const form = event.target;
+          const title = form.elements["title"].value;
+          const content = form.elements["content"].value;
+          const imgFile = document.getElementById("imageFile").files[0];
+          const category = document.getElementById("category").value;
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("content", content);
+          formData.append("category", category);
+          formData.append("imageFile", imgFile);
+          const blogId = "<%=blogContent?.dataValues.blog_id%>";
+          formData.append("blogId", blogId);
+          console.log(formData.append);
 
-    fetch("/blog/create", {
-        method: "POST",
-        body: formData, // JSON.stringify not working
-    })
-    .then((res) => res.json())
-    .then((data) => {
-        console.log("Response data:", data);
-        if (data.redirectUrl) {
-            window.location.href = data.redirectUrl;
-        }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-    });
-});
+          fetch("/blog/update", {
+            method: "POST",
+            body: formData, // JSON.stringify not working
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log("Response data:", data);
+              if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
     </script>
   </body>
 </html>

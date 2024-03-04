@@ -1,13 +1,29 @@
 function isUser() {
   return (req, res, next) => {
-    
     if (!req.session.isAuthenticate) {
-      res.status(400).send({
-        message: "unauthorized user",
-      });
+      req.flash("error", "Access denied");
+      return res.redirect("/home");
+    }
+    next();
+  };
+}
+function checkLogin() {
+  return (req, res, next) => {
+    if (req.session?.user) {
+      req.flash("error", "Already signIn. please logout first");
+      return res.redirect("/home");
     }
     next();
   };
 }
 
-module.exports = isUser;
+function checkAdmin() {
+  return (req, res, next) => {
+    if (!req.session?.admin) {
+      req.flash("error", "Access denied");
+      return res.redirect("/home");
+    }
+    next();
+  };
+}
+module.exports = { isUser, checkLogin, checkAdmin };

@@ -32,7 +32,7 @@
     <%- include('navbar', {categories, isAuthenticate, admin})%>
 
     <!-- Message -->
-    <%- include('message', {messages: [messages]})%>
+    <%- include('message', {successMessage, errorMessage})%>
 
     <div class="frame">
       <% if (loading) { %> <%- include('spinner')%> <% } else if

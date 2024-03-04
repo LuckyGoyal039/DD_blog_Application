@@ -24,7 +24,9 @@
           <div class="col-12 col-md-8 col-lg-6 col-xl-5">
             <div class="card shadow-2-strong" style="border-radius: 1rem">
               <div class="card-body p-5 mb-5">
-                <% if(admin) {%>
+                <!-- Message -->
+                <%- include('message', {successMessage, errorMessage})%> <%
+                if(admin) {%>
                 <h3 class="mb-5 text-center">Create User</h3>
                 <% } else {%>
                 <h3 class="mb-5 text-center">Sign Up</h3>
@@ -137,7 +139,7 @@
             password,
             userType,
           };
-          fetch("/user/signup", {
+          fetch("/admin/createuser", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -151,11 +153,9 @@
               }
             })
             .catch((error) => {
-              // const toast = document.getElementById("errorToast");
-              // const toastBody = toast.querySelector(".toast-body");
-              // toastBody.textContent = data.message;
-              // const bsToast = new bootstrap.Toast(toast);
-              // bsToast.show();
+              if (data?.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              }
             });
         });
     </script>

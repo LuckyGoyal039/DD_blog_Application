@@ -8,33 +8,45 @@ const fs = require("fs");
 const path = require("path");
 
 async function updateBlog(req, res) {
-  const { title, content, category } = req.body;
-  const userId = req.session.user.user_id;
-  const userEmail = req.session.user.email;
-  const decryptedId = decrypt(req.body?.blogId);
-  const blogData = await Blogs.findOne({
-    where: {
-      blog_id: decryptedId,
-    },
-  });
-  if (req.file?.filename && blogData.dataValues.image !== "noImage.jpg") {
-    const imageName = blogData.dataValues.image;
-    const uploadDir = path.join(__dirname, "..", "..", "uploads");
-    const imagePath = path.join(uploadDir, imageName);
-    fs.unlink(imagePath, (err) => {
-      console.log("path/file.txt was deleted");
+  try {
+    const { title, content, category } = req.body;
+    const userId = req.session.user.user_id;
+    const userEmail = req.session.user.email;
+    const decryptedId = decrypt(req.body?.blogId);
+    const blogData = await Blogs.findOne({
+      where: {
+        blog_id: decryptedId,
+      },
+    });
+    if (req.file?.filename && blogData?.dataValues?.image !== "noImage.jpg") {
+      const imageName = blogData.dataValues.image;
+      const uploadDir = path.join(__dirname, "..", "..", "uploads");
+      const imagePath = path.join(uploadDir, imageName);
+      fs.unlink(imagePath, (err) => {
+        console.log("path/file.txt was deleted");
+      });
+    }
+    const updatedImage = req.file?.filename || blogData?.dataValues?.image;
+
+    blogData.set({
+      blogTitle: title,
+      blogText: content,
+      category: category,
+      image: updatedImage,
+    });
+    await blogData.save();
+    await updateAuditLogs(userEmail, blogData.blog_id, "Update");
+    req.flash("success", "Blog Updated Successfully");
+    return res.json({
+      redirectUrl: "/home",
+    });
+  } catch (error) {
+    console.log("update blog error", error);
+    req.flash("error", "Somethig went wrong!! unable to update blog");
+    return res.json({
+      redirectUrl: "/blog/update",
     });
   }
-  const updatedImage = req.file?.filename || blogData.image;
-
-  blogData.set({
-    blogTitle: title,
-    blogText: content,
-    category: category,
-    image: updatedImage,
-  });
-  await blogData.save();
-  await updateAuditLogs(userEmail, blogData.blog_id, "Update");
 }
 
 async function createBlog(req, res) {
@@ -52,13 +64,13 @@ async function createBlog(req, res) {
     });
     await updateAuditLogs(userEmail, newFile.blog_id, "Create");
 
-    req.flash("createBlogSuccess", "Blog Created Successfully");
+    req.flash("success", "Blog Created Successfully");
     return res.json({
       redirectUrl: "/home",
     });
   } catch (error) {
     console.log("create blog error", error);
-    req.flash("createBlogError", "Somethig went wrong!! unable to create blog");
+    req.flash("error", "Somethig went wrong!! unable to create blog");
     return res.json({
       redirectUrl: "/blog/create",
     });
@@ -66,8 +78,8 @@ async function createBlog(req, res) {
 }
 
 async function blogDetails(id) {
-    const decryptedId = decrypt(id);
-    try {
+  const decryptedId = decrypt(id);
+  try {
     const blogPromise = await Blogs.findOne({
       where: { blog_id: decryptedId },
     });
@@ -104,29 +116,32 @@ async function updateAuditLogs(userEmail, blogId, action) {
 
 async function deleteBlog(req, res) {
   try {
-        const blogId = decrypt(req.query.id);
-        const userEmail = req.session.user.email;
+    const blogId = decrypt(req.query.id);
+    const userEmail = req.session.user.email;
     const post = await Blogs.findByPk(blogId);
 
     if (!post) {
       return res.status(404).json({ error: "Blog not found" });
     }
     const imageName = post.image;
-    const uploadDir = path.join(__dirname, "..", "..", "uploads");
-    const imagePath = path.join(uploadDir, imageName);
-
-    fs.unlink(imagePath, (err) => {
-      if (err) throw err;
-      console.log("path/file.txt was deleted");
-    });
+    if (imageName !== "noImage.jpg") {
+      const uploadDir = path.join(__dirname, "..", "..", "uploads");
+      const imagePath = path.join(uploadDir, imageName);
+      fs.unlink(imagePath, (err) => {
+        console.log("path/file.txt was deleted");
+      });
+    }
     const auditRes = await updateAuditLogs(userEmail, post.blog_id, "Delete");
 
     await post.destroy();
-
+    req.flash("success", "Blog Updated Successfully");
     res.redirect("/home");
   } catch (error) {
     console.error("Error deleting blog:", error);
-    res.status(500).json({ error: "Error deleting blog" });
+    req.flash("error", "Error deleting blog");
+    res.status(400).json({
+      redirectUrl: "/home",
+    });
   }
 }
 const iv = Buffer.from("0123456789abcdef0123456789abcdef", "hex");
@@ -218,6 +233,8 @@ async function getBlogs(req, res) {
     const totalPages = Math.ceil(blogCount / limit);
 
     loading = false;
+    const successMessage = req.flash("success");
+    const errorMessage = req.flash("error");
     res.render("home", {
       isAuthenticate,
       blogList: BlogDetails,
@@ -226,7 +243,8 @@ async function getBlogs(req, res) {
       currentPage: page,
       totalPages: totalPages,
       admin: req.session?.admin || false,
-      messages: "",
+      successMessage,
+      errorMessage,
     });
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -236,8 +254,8 @@ async function getBlogs(req, res) {
 
 async function checkAuthBlog(user, id) {
   try {
-        const decryptId = decrypt(id);
-        const blog = await Blogs.findOne({
+    const decryptId = decrypt(id);
+    const blog = await Blogs.findOne({
       where: { blog_id: decryptId },
     });
     if (!blog) return false;
@@ -250,10 +268,15 @@ async function checkAuthBlog(user, id) {
 }
 
 async function getAuditLogs(req, res) {
-  const data = await AuditLog.findAll();
-  const admin = req.session?.admin || false;
-  const isAuthenticate = req.session?.isAuthenticate || false;
-  res.render("auditLogs", { categories: [], data, admin, isAuthenticate });
+  if (req.session?.admin) {
+    const data = await AuditLog.findAll();
+    const admin = req.session?.admin || false;
+    const isAuthenticate = req.session?.isAuthenticate || false;
+    res.render("auditLogs", { categories: [], data, admin, isAuthenticate });
+  } else {
+    req.flash("error", "Access denied");
+    res.redirect("/home");
+  }
 }
 async function getBlogDetails(req, res) {
   const categoryPromise = await Blogs.findAll({
@@ -263,17 +286,16 @@ async function getBlogDetails(req, res) {
   });
   let id;
   if (req.query.id) id = decrypt(req.query.id);
-
   let blogContent = null;
   let result = id ? await Blogs.findOne({ where: { blog_id: id } }) : undefined;
   if (result) {
     blogContent = { ...result };
     blogContent.dataValues.blog_id = encrypt(`${id}`);
   }
-  res.render("createBlog", {
+  res.render("updateBlog", {
     categories: categoryPromise,
     blogContent,
-    messages: req.flash("createBlogError"),
+    messages: req.flash("error"),
   });
 }
 module.exports = {
@@ -284,4 +306,5 @@ module.exports = {
   checkAuthBlog,
   getAuditLogs,
   getBlogDetails,
+  updateBlog,
 };

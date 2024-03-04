@@ -6,14 +6,23 @@
     <title>Document</title>
   </head>
   <body>
-    <% if (messages.length > 0) { %>
+    <% if (errorMessage) { %>
     <p
       class="text-danger text-center"
       style="transition: opacity 0.5s ease-in-out"
       role="alert"
       id="flashMessage"
     >
-      <% messages.forEach(message => { %> <%= message %> <% }); %>
+      <%= errorMessage %>
+    </p>
+    <% } else if(successMessage){ %>
+    <p
+      class="text-success text-center"
+      style="transition: opacity 0.5s ease-in-out"
+      role="alert"
+      id="flashMessage"
+    >
+      <%= errorMessage %>
     </p>
     <% } %>
   </body>

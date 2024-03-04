@@ -5,11 +5,12 @@ const {
   deleteBlog,
   checkAuthBlog,
   getBlogDetails,
+  updateBlog,
 } = require("../app/controllers/blog");
 const upload = require("../config/multer/index");
 const Blogs = require("../app/models/blog");
 const Sequelize = require("sequelize");
-const isUser = require("../middlewares/user");
+const { isUser } = require("../middlewares/user");
 
 const router = express.Router();
 
@@ -25,10 +26,23 @@ router.get("/", async (req, res) => {
   res.render("blog", { categories: [], blogData, isAuthenticate, admin });
 });
 
-router.get("/create", isUser(), getBlogDetails);
+router.get("/create", isUser(), async (req, res) => {
+  const categoryPromise = await Blogs.findAll({
+    attributes: [
+      [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
+    ],
+  });
+  res.render("createBlog", {
+    categories: categoryPromise,
+    messages: req.flash("createBlogError"),
+  });
+});
 
 router.post("/create", isUser(), upload.single("imageFile"), createBlog);
 
-router.get("/delete", deleteBlog);
+router.get("/update", isUser(), getBlogDetails);
+router.post("/update", isUser(), upload.single("imageFile"), updateBlog);
+
+router.get("/delete", isUser(), deleteBlog);
 
 module.exports = router;
