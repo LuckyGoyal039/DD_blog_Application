@@ -34,6 +34,10 @@
   </head>
   <body>
     <%- include('navbar', {categories, isAuthenticate, admin})%>
+
+    <!-- Message -->
+    <%- include('message', {successMessage, errorMessage})%>
+
     <div class="d-flex justify-content-center">
       <div style="padding: 30px 350px">
         <div>
@@ -60,9 +64,7 @@
           </div>
         </div>
 
-        <div>
-          <p><%=blogData.blogText%></p>
-        </div>
+        <div><%-blogData.description%></div>
         <%if(isAuthenticate) {%>
         <div class="d-flex justify-content-between">
           <div>
@@ -78,6 +80,10 @@
         </div>
         <%} %>
       </div>
+    </div>
+    <div>
+      <%- include('blogComments', {user, blogId:blogData?.blog_id,
+      comments:blogData?.comments })%>
     </div>
     <!-- Bootstrap -->
     <script

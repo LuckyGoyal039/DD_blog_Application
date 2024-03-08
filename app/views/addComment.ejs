@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form
+      class="mb-3"
+      method="post"
+      action="/blog/addcomment/?id=<%= encodeURIComponent(blogId)%>"
+      enctype="application/x-www-form-urlencoded"
+    >
+      <div class="form-group">
+        <label for="exampleInputEmail1">Name</label>
+        <% if(user) { %>
+        <input
+          type="text"
+          class="form-control"
+          id="username"
+          placeholder="Enter email"
+          name="username"
+          value="<%=user%>"
+          readonly
+        />
+        <% } else {%><input
+          type="text"
+          class="form-control"
+          id="username"
+          placeholder="Enter email"
+          name="username"
+        />
+        <%}%>
+      </div>
+      <div class="form-group">
+        <label for="comment">Text</label>
+        <textarea
+          class="form-control"
+          id="comment"
+          name="comment"
+          rows="3"
+          placeholder="Add comment"
+        ></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </body>
+</html>

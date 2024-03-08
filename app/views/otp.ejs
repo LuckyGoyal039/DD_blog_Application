@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OTP Input</title>
+    <style>
+      .container {
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      #otpContainer {
+        display: flex !important;
+      }
+
+      .otpInput {
+        width: 30px;
+        height: 40px;
+        font-size: 20px;
+        margin: 0 5px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="otpContainer ">
+        <input
+          type="text"
+          maxlength="1"
+          id="otp1"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp2')"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp2"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp3')"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp3"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp4')"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp4"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp5')"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp5"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp6')"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp6"
+          class="otpInput"
+          onkeyup="focusNext(this, 'otp6')"
+        />
+      </div>
+    </div>
+    <script>
+      function focusNext(current, nextFieldID) {
+        if (current.value.length == 1) {
+          document.getElementById(nextFieldID).focus();
+        }
+      }
+
+      function focusPrevious(current, prevFieldID) {
+        if (current.value.length == 0) {
+          document.getElementById(prevFieldID).focus();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var inputs = document.querySelectorAll(".otpInput");
+
+        for (var i = 0; i < inputs.length; i++) {
+          inputs[i].addEventListener("keydown", function (event) {
+            if (event.key === "Backspace") {
+              var currentIndex = Array.prototype.indexOf.call(inputs, this);
+              if (currentIndex > 0) {
+                focusPrevious(this, inputs[currentIndex - 1].id);
+              }
+            }
+          });
+        }
+      });
+      
+    </script>
+  </body>
+</html>

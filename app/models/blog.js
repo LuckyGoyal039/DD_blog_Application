@@ -1,14 +1,12 @@
 const sequelize = require("../../config/db/connection");
 const { DataTypes } = require("sequelize");
 const Category = require("./category");
+const Comments = require("./comments");
+const Tag = require("./tags");
 const User = require("./user");
 
-const Blogs = sequelize.define("Blog", {
+const Blog = sequelize.define("Blog", {
   blog_id: {
-    // type: DataTypes.UUID,
-    // allowNull: false,
-    // primaryKey: true,
-    // defaultValue: DataTypes.UUIDV4,
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -17,7 +15,11 @@ const Blogs = sequelize.define("Blog", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  blogText: {
+  summary: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  description: {
     type: DataTypes.TEXT,
     allowNull: false,
   },
@@ -26,34 +28,41 @@ const Blogs = sequelize.define("Blog", {
     allowNull: false,
   },
   image: {
-    // type: DataTypes.BLOB("long"),
-    type: DataTypes.STRING,
-    allowNull: true,
-    // defaultValue: "image link"
-  },
-  category: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  // likes: {
-  //   type: DataTypes.INTEGER,
-  //   defaultValue: 0,
-  // },
-  // views: {
-  //   type: DataTypes.INTEGER,
-  //   defaultValue: 0,
-  // },
-  // comments: {
-  //   type: DataTypes.JSON,
-  //   // defaultValue:0
-  // },
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  tags: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    get() {
+      return this.getDataValue("tags")
+        .split(",")
+        .map((tag) => parseInt(tag));
+    },
+    set(val) {
+      this.setDataValue("tags", val.join(","));
+    },
+  },
+  likes: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  views: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
 });
 
-// Define associations
-// Blogs.belongsTo(Category, { foreignKey: "categoryId", as: "categoryID" });
+Blog.belongsTo(Category, { foreignKey: "categoryId", onDelete: "CASCADE" });
+// Blog.belongsTo(Tag, { foreignKey: "tags" });
 
-// UserEmployee.associate = (models) => {
-//   // UserEmployee.belongsTo(models.user_tm, {foreignKey: 'ID', as: 'Employee'});
-//   Blogs.belongsTo(User, { foreignKey: "use_id", onDelete: "CASCADE" });
-// };
-module.exports = Blogs;
+// not working
+// Blog.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
+
+Blog.hasMany(Comments, { foreignKey: "blogId", onDelete: "CASCADE" });
+
+module.exports = Blog;

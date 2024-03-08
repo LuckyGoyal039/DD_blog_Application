@@ -49,18 +49,18 @@
             >
           </div>
           <div class="form-group">
-            <label for="content"
-              ><strong style="font-size: large">Content</strong></label
+            <label for="summary"
+              ><strong style="font-size: large">summary</strong></label
             >
             <textarea
               class="form-control"
-              id="content"
-              rows="10"
+              id="summary"
+              rows="3"
               placeholder="Let's start..."
-              name="content"
+              name="summary"
               required
             >
-<%=blogContent?.dataValues?.blogText%>
+<%=blogContent?.dataValues?.summary%>
           </textarea
             >
           </div>
@@ -78,7 +78,24 @@
             />
             <datalist id="category">
               <% categories.forEach(function(item) { %>
-              <option value="<%=item.category%>"></option>
+              <option><%=item.category%></option>
+              <% }); %>
+            </datalist>
+          </div>
+          <div class="pb-2">
+            <label for="tags"
+              ><strong style="font-size: large">Tags: </strong>
+            </label>
+            <input
+              list="tags"
+              name="tags"
+              id="tags"
+              class="form-control"
+              value="<%= blogContent?.dataValues?.tags%>"
+            />
+            <datalist id="tags">
+              <% tags.forEach(function(item) { %>
+              <option><%=item.tags%></option>
               <% }); %>
             </datalist>
           </div>
@@ -94,6 +111,21 @@
             />
           </div>
 
+          <div class="form-group">
+            <label for="description"
+              ><strong style="font-size: large">Description</strong></label
+            >
+            <textarea
+              class="form-control"
+              id="description"
+              rows="3"
+              placeholder="Let's start..."
+              name="description"
+              required
+            >
+<%=blogContent?.dataValues?.summary%></textarea
+            >
+          </div>
           <button class="btn btn-secondary">
             <a href="/home" style="color: #ffff">Cancel</a>
           </button>
@@ -131,12 +163,13 @@
           const category = document.getElementById("category").value;
           const formData = new FormData();
           formData.append("title", title);
-          formData.append("content", content);
+          formData.append("summary", summary);
           formData.append("category", category);
           formData.append("imageFile", imgFile);
+          formData.append("description", description);
+          formData.append("tags", tags);
           const blogId = "<%=blogContent?.dataValues.blog_id%>";
           formData.append("blogId", blogId);
-          console.log(formData.append);
 
           fetch("/blog/update", {
             method: "POST",

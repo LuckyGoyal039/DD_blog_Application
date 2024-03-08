@@ -26,4 +26,5 @@ function checkAdmin() {
     next();
   };
 }
+
 module.exports = { isUser, checkLogin, checkAdmin };

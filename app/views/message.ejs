@@ -4,26 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <style>
+      .message {
+        color: white;
+        font-size: large;
+        transition: opacity 0.5s ease-in-out;
+        /* padding: 15px 0; */
+      }
+      .error {
+        background-color: red;
+      }
+      .success {
+        background-color: green;
+      }
+    </style>
   </head>
   <body>
     <% if (errorMessage) { %>
-    <p
-      class="text-danger text-center"
-      style="transition: opacity 0.5s ease-in-out"
-      role="alert"
-      id="flashMessage"
-    >
+    <p class="message error text-center" role="alert" id="flashMessage">
       <%= errorMessage %>
     </p>
     <% } else if(successMessage){ %>
-    <p
-      class="text-success text-center"
-      style="transition: opacity 0.5s ease-in-out"
-      role="alert"
-      id="flashMessage"
-    >
-      <%= errorMessage %>
+    <p class="message success text-center" role="alert" id="flashMessage">
+      <%= successMessage %>
     </p>
     <% } %>
+
+    <script>
+      // Remove message after 3 seconds
+      setTimeout(() => {
+        const flashMessage = document.getElementById("flashMessage");
+        if (flashMessage) {
+          flashMessage.style.opacity = "0";
+          setTimeout(() => {
+            flashMessage.remove();
+          }, 500); // 500ms, same as the transition duration
+        }
+      }, 3000);
+    </script>
   </body>
 </html>

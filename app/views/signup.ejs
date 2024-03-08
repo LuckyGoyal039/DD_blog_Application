@@ -27,9 +27,9 @@
                 <!-- Message -->
                 <%- include('message', {successMessage, errorMessage})%>
                 <h3 class="mb-5 text-center">Sign Up</h3>
-                <form id="signUp" action="/user/signup" method="post">
+                <form id="signUp" action="" method="post">
                   <div class="form-outline mb-2">
-                    <label class="form-label" for="email">Username</label>
+                    <label class="form-label" for="username">Username</label>
                     <input
                       type="text"
                       id="username"
@@ -40,13 +40,15 @@
                   </div>
                   <div class="form-outline mb-2">
                     <label class="form-label" for="email">Email</label>
-                    <input
-                      type="email"
-                      id="email"
-                      class="form-control form-control-lg"
-                      name="email"
-                      required
-                    />
+                    <div class="d-flex">
+                      <input
+                        type="email"
+                        id="email"
+                        class="form-control form-control-lg"
+                        name="email"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div class="form-outline mb-2">
@@ -59,19 +61,34 @@
                       required
                     />
                   </div>
-                  <div class="d-flex justify-content-between mt-4">
+                  <span class="otpInput" style="display: none">
+                    <%-include('otp')%>
+                  </span>
+                  <div
+                    class="d-flex justify-content-between mt-4"
+                    id="buttonContainer"
+                  >
                     <a
                       href="/home"
                       class="btn btn-lg btn-primary"
-                      style="width: 100px"
+                      style="width: 130px"
                       >Back</a
                     >
                     <button
+                      id="sendOtpButton"
                       class="btn btn-primary btn-lg"
                       type="submit"
-                      style="width: 100px"
+                      style="width: 130px"
                     >
-                      SignUp
+                      Send OTP
+                    </button>
+                    <button
+                      id="submitButton"
+                      class="btn btn-primary btn-lg"
+                      type="submit"
+                      style="width: 130px; display: none"
+                    >
+                      Submit
                     </button>
                   </div>
                 </form>
@@ -105,36 +122,65 @@
     ></script>
     <!-- custom js -->
     <script>
-      document
-        .getElementById("signUp")
-        .addEventListener("submit", function (event) {
-          const form = event.target;
+      var sendOtpButton = document.getElementById("sendOtpButton");
+      var submitButton = document.getElementById("submitButton");
+      sendOtpButton.addEventListener("click", function () {
+        sendOtpButton.style.display = "none";
+        submitButton.style.display = "inline-block";
+        event.preventDefault();
+        document.getElementById("username").readOnly = true;
+        document.getElementById("email").readOnly = true;
+        document.getElementById("password").readOnly = true;
+        document.querySelector(".otpInput").style.display = "inline";
 
-          const username = form.elements["username"].value;
-          const email = form.elements["email"].value;
-          const password = form.elements["password"].value;
-          const formData = {
-            username,
-            email,
-            password,
-          };
-          fetch("/user/signup", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
+        const email = document.getElementById("email").value;
+        const formData = {
+          email,
+        };
+        fetch("/user/verifyemail", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+          .then((res) => res.json())
+          .then((data) => {})
+          .catch((error) => {
+            window.location.href = "/home";
+          });
+      });
+      submitButton.addEventListener("click", function () {
+        const email = document.getElementById("email").value;
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        let otp = "";
+        for (var i = 1; i <= 6; i++) {
+          otp += document.getElementById("otp" + i).value;
+        }
+        const formData = {
+          username,
+          email,
+          password,
+          otp,
+        };
+        fetch("/user/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.redirectUrl) {
+              // window.location.href = "/home";
+            }
           })
-            .then((res) => res.json())
-            .then((data) => {
-              if (data?.redirectUrl) {
-                window.location.href = data.redirectUrl;
-              }
-            })
-            .catch((error) => {
-              window.location.href = "/home";
-            });
-        });
+          .catch((error) => {
+            // window.location.href = "/";
+          });
+      });
     </script>
   </body>
 </html>

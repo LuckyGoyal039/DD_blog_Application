@@ -1,23 +1,28 @@
-const Blogs = require("../models/blog");
+const Blog = require("../models/blog");
+const Category = require("../models/category");
 const User = require("../models/user");
 const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
-const crypto = require("crypto");
+
 const AuditLog = require("../models/auditLogs");
 const fs = require("fs");
 const path = require("path");
+const Tag = require("../models/tags");
+const { getComments } = require("./comment");
+const { decrypt, encrypt } = require("./helper");
 
 async function updateBlog(req, res) {
   try {
-    const { title, content, category } = req.body;
+    const { title, summary, category, description, tags } = req.body;
     const userId = req.session.user.user_id;
     const userEmail = req.session.user.email;
     const decryptedId = decrypt(req.body?.blogId);
-    const blogData = await Blogs.findOne({
+    const blogData = await Blog.findOne({
       where: {
         blog_id: decryptedId,
       },
     });
+
     if (req.file?.filename && blogData?.dataValues?.image !== "noImage.jpg") {
       const imageName = blogData.dataValues.image;
       const uploadDir = path.join(__dirname, "..", "..", "uploads");
@@ -26,16 +31,34 @@ async function updateBlog(req, res) {
         console.log("path/file.txt was deleted");
       });
     }
-    const updatedImage = req.file?.filename || blogData?.dataValues?.image;
+    // const updatedImage = req.file?.filename || blogData?.dataValues?.image;
+    // let categoryId = await Category.findOne({ where: { name: category } });
+    // let tagArray = tags.split(",").map((item) => item.trim());
+    // const tagIds = [];
 
-    blogData.set({
-      blogTitle: title,
-      blogText: content,
-      category: category,
-      image: updatedImage,
-    });
-    await blogData.save();
-    await updateAuditLogs(userEmail, blogData.blog_id, "Update");
+    // for (const tagName of tagArray) {
+    //   let tag = await Tag.findOne({ where: { tagname: tagName } });
+    //   if (!tag) {
+    //     tag = await Tag.create({ tagname: tagName });
+    //   }
+    //   tagIds.push(tag.tag_id);
+    // }
+    // if (!categoryId) {
+    //   categoryId = await Category.create({
+    //     name: category,
+    //   });
+    // }
+    // blogData.set({
+    //   blogTitle: title,
+    //   summary: summary,
+    //   categoryId: categoryId.category_id,
+    //   userId: userId,
+    //   image: image,
+    //   description,
+    //   tags: tagIds,
+    // });
+    // await blogData.save();
+    // await updateAuditLogs(userEmail, blogData.blog_id, "Update");
     req.flash("success", "Blog Updated Successfully");
     return res.json({
       redirectUrl: "/home",
@@ -51,16 +74,34 @@ async function updateBlog(req, res) {
 
 async function createBlog(req, res) {
   try {
-    const { title, content, category } = req.body;
+    const { title, summary, category, description, tags } = req.body;
     const userId = req.session.user.user_id;
     const userEmail = req.session.user.email;
     const image = req.file?.filename || "noImage.jpg";
-    const newFile = await Blogs.create({
+    let categoryId = await Category.findOne({ where: { name: category } });
+    let tagArray = tags.split(",").map((item) => item.trim());
+    const tagIds = [];
+
+    for (const tagName of tagArray) {
+      let tag = await Tag.findOne({ where: { tagname: tagName } });
+      if (!tag) {
+        tag = await Tag.create({ tagname: tagName });
+      }
+      tagIds.push(tag.tag_id);
+    }
+    if (!categoryId) {
+      categoryId = await Category.create({
+        name: category,
+      });
+    }
+    const newFile = await Blog.create({
       blogTitle: title,
-      blogText: content,
-      category: category,
+      summary: summary,
+      categoryId: categoryId.category_id,
       userId: userId,
       image: image,
+      description,
+      tags: tagIds,
     });
     await updateAuditLogs(userEmail, newFile.blog_id, "Create");
 
@@ -77,10 +118,10 @@ async function createBlog(req, res) {
   }
 }
 
-async function blogDetails(id) {
+async function blogDetails(id, user) {
   const decryptedId = decrypt(id);
   try {
-    const blogPromise = await Blogs.findOne({
+    const blogPromise = await Blog.findOne({
       where: { blog_id: decryptedId },
     });
     const userPromise = await User.findOne();
@@ -88,11 +129,15 @@ async function blogDetails(id) {
 
     const BlogDetails = async () => {
       let user = await User.findOne({ where: { user_id: data.userId } });
+      const allComments = await getComments(decryptedId, user);
       data.dataValues.blog_id = encrypt(`${data.dataValues.blog_id}`);
-      return { ...data.dataValues, author: user.userName };
+      return {
+        ...data.dataValues,
+        comments: allComments,
+        author: user.userName,
+      };
     };
     const details = await BlogDetails();
-
     return details;
   } catch (error) {
     console.log("blog details error", error);
@@ -118,7 +163,7 @@ async function deleteBlog(req, res) {
   try {
     const blogId = decrypt(req.query.id);
     const userEmail = req.session.user.email;
-    const post = await Blogs.findByPk(blogId);
+    const post = await Blog.findByPk(blogId);
 
     if (!post) {
       return res.status(404).json({ error: "Blog not found" });
@@ -144,78 +189,85 @@ async function deleteBlog(req, res) {
     });
   }
 }
-const iv = Buffer.from("0123456789abcdef0123456789abcdef", "hex");
-const key = Buffer.from(
-  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-  "hex"
-);
-
-const algorithm = "aes-256-cbc";
-// encryption
-function encrypt(text) {
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return encrypted;
-}
-function decrypt(encryptedText) {
-  try {
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encryptedText, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
-  } catch (error) {
-    console.log(error);
-    return "error";
-  }
-}
 
 async function fetchBlogData(filterQuery, page = 1, limit = 8) {
   const offset = (page - 1) * limit;
+  const whereCondition = {};
 
-  const whereCondition = filterQuery
-    ? {
-        [Op.or]: [
-          { category: { [Op.like]: `%${filterQuery}%` } },
-          { blogTitle: { [Op.like]: `%${filterQuery}%` } },
-        ],
-      }
-    : {};
-  const allBlogs = await Blogs.findAll({
+  if (filterQuery) {
+    const categoryId = await Category.findOne({
+      where: { name: filterQuery },
+      attributes: ["category_id"],
+    });
+    const tagId = await Tag.findOne({
+      where: { tagname: filterQuery },
+      attributes: ["tag_id"],
+    });
+    whereCondition[Op.or] = [
+      { categoryId: categoryId?.category_id || "" },
+      { blogTitle: { [Op.like]: `%${filterQuery}%` } },
+      { tags: { [Op.like]: `%${tagId?.tag_id}%` } },
+    ];
+  }
+
+  const allBlogs = await Blog.findAll({
     where: whereCondition,
     limit: limit,
     offset: offset,
+    include: [Category],
+    // include: [User, Tag], //not working
   });
   const BlogDetails = await Promise.all(
-    allBlogs.map(async (ele, ind) => {
-      let user = await User.findOne({ where: { user_id: ele.userId } });
-      ele.dataValues.blog_id = encrypt(`${ele.dataValues.blog_id}`);
-      return { ...ele.dataValues, author: user.userName };
+    allBlogs.map(async (ele) => {
+      const user = await User.findOne({ where: { user_id: ele.userId } }); //checkpoint
+      const tags = await Tag.findAll({
+        where: { tag_id: ele.tags },
+        attributes: ["tagname"],
+      });
+      const tagNames = tags.map((tag) => tag.tagname);
+      return {
+        blog_id: encrypt(`${ele.blog_id}`),
+        blogTitle: ele.blogTitle,
+        summary: ele.summary,
+        description: ele.description,
+        image: ele.image,
+        category: ele.category.name,
+        author: user.userName,
+        tags: tagNames,
+        likes: ele.likes,
+        views: ele.views,
+      };
     })
   );
   return BlogDetails;
 }
 
 async function fetchCategoryData() {
-  return await Blogs.findAll({
-    attributes: [
-      [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
-    ],
+  const categories = await Category.findAll({
+    attributes: ["name"],
   });
+  const categoryNames = categories.map((category) => category.name);
+  return categoryNames;
 }
 
 async function totalBlogs(filterQuery) {
+  const categoryId = await Category.findOne({
+    where: { name: filterQuery || "" },
+    attributes: ["category_id"],
+  });
   const whereCondition = filterQuery
     ? {
         [Op.or]: [
-          { category: { [Op.like]: `%${filterQuery}%` } },
+          { categoryId: categoryId?.dataValues?.category_id || "" },
           { blogTitle: { [Op.like]: `%${filterQuery}%` } },
         ],
       }
     : {};
-  return await Blogs.count({ where: whereCondition });
-}
 
+  return await Blog.count({
+    where: whereCondition,
+  });
+}
 async function getBlogs(req, res) {
   try {
     let isAuthenticate = req.session.isAuthenticate;
@@ -223,11 +275,12 @@ async function getBlogs(req, res) {
     let filterQuery = req.query?.filter;
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
-    if (filterQuery === "All") filterQuery = undefined;
+    if (filterQuery === "All") filterQuery = "";
     // Get Blog Data
     const BlogDetails = await fetchBlogData(filterQuery, page, limit);
     // get category List
     const allCategory = await fetchCategoryData();
+
     // get blog count
     const blogCount = await totalBlogs(filterQuery);
     const totalPages = Math.ceil(blogCount / limit);
@@ -255,7 +308,7 @@ async function getBlogs(req, res) {
 async function checkAuthBlog(user, id) {
   try {
     const decryptId = decrypt(id);
-    const blog = await Blogs.findOne({
+    const blog = await Blog.findOne({
       where: { blog_id: decryptId },
     });
     if (!blog) return false;
@@ -279,23 +332,22 @@ async function getAuditLogs(req, res) {
   }
 }
 async function getBlogDetails(req, res) {
-  const categoryPromise = await Blogs.findAll({
-    attributes: [
-      [Sequelize.fn("DISTINCT", Sequelize.col("category")), "category"],
-    ],
-  });
+  const categoryPromise = await Category.findAll();
+  const tagList = await Tag.findAll();
   let id;
   if (req.query.id) id = decrypt(req.query.id);
   let blogContent = null;
-  let result = id ? await Blogs.findOne({ where: { blog_id: id } }) : undefined;
-  if (result) {
-    blogContent = { ...result };
-    blogContent.dataValues.blog_id = encrypt(`${id}`);
+  let result = id ? await Blog.findOne({ where: { blog_id: id } }) : undefined;
+  if (!result) {
+    req.flash("error", "Access denied");
+    return res.redirect("/home");
   }
+  blogContent = { ...result };
+  blogContent.dataValues.blog_id = encrypt(`${id}`);
   res.render("updateBlog", {
     categories: categoryPromise,
     blogContent,
-    messages: req.flash("error"),
+    tags: tagList,
   });
 }
 module.exports = {

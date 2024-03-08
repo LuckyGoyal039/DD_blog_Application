@@ -17,6 +17,12 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
     />
+
+    <!-- select2 css -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div class="d-flex justify-content-center">
@@ -48,15 +54,15 @@
             >
           </div>
           <div class="form-group">
-            <label for="content"
-              ><strong style="font-size: large">Content</strong></label
+            <label for="summary"
+              ><strong style="font-size: large">summary</strong></label
             >
             <textarea
               class="form-control"
-              id="content"
-              rows="10"
+              id="summary"
+              rows="3"
               placeholder="Let's start..."
-              name="content"
+              name="summary"
               required
             ></textarea>
           </div>
@@ -65,12 +71,38 @@
             <label for="category"
               ><strong style="font-size: large">Select Category: </strong>
             </label>
-            <input list="category" name="category" id="category"  class="form-control" required>
-          <datalist id="category">
-            <% categories.forEach(function(item) { %>
-            <option ><%=item.category%></option>
-            <% }); %>
-          </datalist>
+            <input
+              list="category"
+              name="category"
+              id="category"
+              class="form-control"
+              required
+            />
+            <datalist id="category">
+              <% categories.forEach(function(item) { %>
+              <option><%=item.category%></option>
+              <% }); %>
+            </datalist>
+          </div>
+          <div class="pb-2">
+            <label for="tags">
+              <strong style="font-size: large">Tags: </strong>
+            </label>
+            <input
+              type="text"
+              list="tags"
+              name="tags"
+              id="tags"
+              class="form-control"
+              placeholder="Tags separated by Comma(',') only"
+            />
+            <datalist id="tags">
+              <% tags.forEach(function(item) { %>
+              <option><%= item.tagname %></option>
+              <% }); %>
+            </datalist>
+          </div>
+
           <div class="form-group">
             <label for="imageFile"
               ><strong style="font-size: large"> Select Image for Blog </strong>
@@ -82,6 +114,19 @@
               name="imageFile"
               required
             />
+          </div>
+
+          <div class="form-group">
+            <label for="description"
+              ><strong style="font-size: large">Description</strong></label
+            >
+            <textarea
+              class="form-control"
+              id="description"
+              rows="3"
+              placeholder="Let's start..."
+              name="description"
+            ></textarea>
           </div>
 
           <button class="btn btn-secondary">
@@ -107,37 +152,65 @@
       integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
       crossorigin="anonymous"
     ></script>
+
+    <!-- Include jQuery (required by Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Select2 JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <!-- Initialize Select2 -->
+    <script>
+      $(document).ready(function () {
+        $("#tags").select2();
+      });
+    </script>
+
+    <!-- CKEditor -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <script>
+      ClassicEditor.create(document.querySelector("#description")).catch(
+        (error) => {
+          console.error(error);
+        }
+      );
+    </script>
+
     <!-- custom js -->
     <script>
-      document.getElementById("blogForm").addEventListener("submit", function (event) {
-    event.preventDefault();
+      document
+        .getElementById("blogForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
 
-    const form = event.target;
-    const title = form.elements["title"].value;
-    const content = form.elements["content"].value;
-    const imgFile = document.getElementById("imageFile").files[0];
-    const category = document.getElementById("category").value;
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-    formData.append("category", category);
-    formData.append("imageFile", imgFile);
+          const form = event.target;
+          const title = form.elements["title"].value;
+          const summary = form.elements["summary"].value;
+          const imgFile = document.getElementById("imageFile").files[0];
+          const category = document.getElementById("category").value;
+          const description = document.getElementById("description").value;
+          const tags = document.getElementById("tags").value;
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("summary", summary);
+          formData.append("category", category);
+          formData.append("imageFile", imgFile);
+          formData.append("description", description);
+          formData.append("tags", tags);
 
-    fetch("/blog/create", {
-        method: "POST",
-        body: formData, // JSON.stringify not working
-    })
-    .then((res) => res.json())
-    .then((data) => {
-        console.log("Response data:", data);
-        if (data.redirectUrl) {
-            window.location.href = data.redirectUrl;
-        }
-    })
-    .catch((error) => {
-        console.error("Error:", error);
-    });
-});
+          fetch("/blog/create", {
+            method: "POST",
+            body: formData, // JSON.stringify not working
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log("Response data:", data);
+              if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
     </script>
   </body>
 </html>

@@ -14,6 +14,7 @@
         border-radius: 10px;
         border: 1px solid #ccc;
         min-height: 430px;
+        position: relative;
       }
 
       .blog-item:hover {
@@ -39,18 +40,73 @@
         padding: 0 10px;
         width: 300px;
       }
+      .ribbon {
+        position: absolute;
+        right: -5px;
+        top: -5px;
+        z-index: 1;
+        overflow: hidden;
+        width: 93px;
+        height: 93px;
+        text-align: right;
+      }
+      .ribbon span {
+        overflow: hidden;
+        font-size: 0.8rem;
+        color: #fff;
+        text-transform: uppercase;
+        text-align: center;
+        font-weight: bold;
+        line-height: 32px;
+        transform: rotate(45deg);
+        width: 125px;
+
+        display: block;
+        background: #79a70a;
+        background: linear-gradient(#9bc90d 0%, #79a70a 100%);
+        box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+        position: absolute;
+        top: 17px;
+        right: -29px;
+        overflow: hidden;
+        height: 35px;
+      }
+
+      .ribbon span::before {
+        content: "";
+        position: absolute;
+        left: 0px;
+        top: 100%;
+        z-index: -1;
+        border-left: 3px solid #79a70a;
+        border-right: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+        border-top: 3px solid #79a70a;
+      }
+      .ribbon span::after {
+        content: "";
+        position: absolute;
+        right: 0%;
+        top: 100%;
+        z-index: -1;
+        border-right: 3px solid #79a70a;
+        border-left: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+        border-top: 3px solid #79a70a;
+      }
     </style>
   </head>
   <body>
-    <li
-      class="blog-item"
-      href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
-    >
+    <li class="blog-item">
       <a
         href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
         style="text-decoration: none; color: inherit"
         class="outerContiner"
       >
+        <div class="ribbon">
+          <span class="ribbon-text"><%=item.category%></span>
+        </div>
+
         <img
           class="card-img-top blogImg"
           src="http://localhost:3000/<%= encodeURI(item.image) %>"
@@ -69,6 +125,13 @@
           <a href="/blog/?id=<%= encodeURIComponent(item.blog_id)%>"
             >Continue reading</a
           >
+          <div class="d-flex">
+            <% item.tags.forEach(function(item) { %>
+            <a class="mr-2 small" href="?filter=<%= encodeURIComponent(item)%>"
+              >#<%=item%></a
+            >
+            <% }); %>
+          </div>
         </div>
       </a>
     </li>

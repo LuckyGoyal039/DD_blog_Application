@@ -1,11 +1,16 @@
 const express = require("express");
-const { userSignIn, userSignUp } = require("../app/controllers/user");
+const {
+  userSignIn,
+  userSignUp,
+  sendEmail,
+} = require("../app/controllers/user");
 const { checkLogin } = require("../middlewares/user");
 const flash = require("connect-flash");
 const router = express.Router();
 
 // Sign-up
 router.get("/signup", checkLogin(), (req, res) => {
+  console.log(req.flash("error"));
   res.render("signup", {
     successMessage: req.flash("success"),
     errorMessage: req.flash("error"),
@@ -33,5 +38,9 @@ router.get("/logout", (req, res) => {
       res.redirect("/home");
     }
   });
+  delete res.locals.user;
+  delete res.locals.isAuthenticated;
 });
+
+router.post("/verifyemail", sendEmail);
 module.exports = router;

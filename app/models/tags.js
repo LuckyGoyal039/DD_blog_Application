@@ -1,20 +1,17 @@
 const sequelize = require("../../config/db/connection");
 const { DataTypes } = require("sequelize");
 
-const Category = sequelize.define("category", {
-  category_id: {
+const Tag = sequelize.define("tag", {
+  tag_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
-  name: {
+  tagname: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
   },
 });
 
-// check point
-// Category.hasMany(Blog, { foreignKey: "categoryId", onDelete: "CASCADE" });
-
-module.exports = Category;
+module.exports = Tag;

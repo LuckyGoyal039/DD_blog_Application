@@ -5,10 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
+  <style>
+    @media only screen and (min-width: 768px) {
+      .navRight {
+        display: flex;
+        align-items: center;
+      }
+      .userOption {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .createBlogLink{
+        padding:0 0 0 10px;
+      }
+      .loginbtn{
+        margin-left: 10px;
+      }
+    }
+  </style>
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="/home">Blog Application</a>
-
+      <a class="navbar-brand" href="/home">Open Blogs</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
@@ -32,8 +61,8 @@
               <% categories.forEach(function(item) { %>
               <a
                 class="dropdown-item"
-                href="?filter=<%= encodeURIComponent(item.category)%>"
-                ><%=item.category%></a
+                href="?filter=<%= encodeURIComponent(item)%>"
+                ><%=item%></a
               >
               <% }); %>
             </div>
@@ -50,7 +79,7 @@
           </li>
           <%}%>
         </ul>
-        <div class="d-flex">
+        <div class="navRight">
           <% if(categories.length>0) { %>
           <form class="form-inline my-2 my-lg-0">
             <input
@@ -67,21 +96,16 @@
             </button>
           </form>
           <%}%>
-          <div class="user">
+          <div>
             <%if(isAuthenticate) { %>
-            <div class="adminOptions d-flex justify-content-center">
+            <div class="userOption">
               <div>
-                <a
-                  class="nav-link d-flex align-item-center justify-content-center"
-                  href="/blog/create"
-                >
+                <a class="createBlogLink d-flex align-items-center" href="/blog/create">
                   <span> Create Blog </span>
                   <span class="material-symbols-outlined"> add </span>
                 </a>
               </div>
-              <div
-                class="dropdown d-flex justify-content-center align-items-center"
-              >
+              <div class="dropdown">
                 <button
                   class="btn btn-link"
                   type="button"
@@ -101,17 +125,15 @@
                   class="dropdown-menu dropdown-menu-right"
                   aria-labelledby="dropdownMenuButton"
                 >
-                 
                   <a class="dropdown-item" href="/user/logout">Logout</a>
                 </div>
               </div>
             </div>
             <% } else {%>
 
-            <div class="loginbtn" style="padding: 4px 20px">
-              <a href="/user/login">Login</a>
+            <div class="loginbtn btn btn-primary">
+              <a href="/user/login" style="color:white">Login</a>
             </div>
-
             <%}%>
           </div>
         </div>

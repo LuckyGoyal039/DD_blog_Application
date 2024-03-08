@@ -3,15 +3,24 @@ const bcrypt = require("bcrypt");
 const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
 const flash = require("connect-flash");
+const app = require("express")();
+const nodemailer = require("nodemailer");
+let genratedOtp;
+
+const { mailFormat, generateOTP } = require("./otpmailformat");
 
 const userSignUp = async function (req, res) {
-  const { username, email, password } = req.body;
+  const { username, email, password, otp } = req.body;
+
   const adminBool = req.session.admin && req.body?.userType === "admin";
   try {
     const isUser = await User.findOne({ where: { email: email } });
+    if (genratedOtp !== otp) {
+      req.flash("error", "Invalid OTP ");
+      return res.redirect("/user/signup");
+    }
     if (isUser) {
       req.flash("error", "User already exit ");
-      
       return res.redirect(`${req.originalUrl}`);
     }
     // saltRounds not working
@@ -51,12 +60,13 @@ const userSignIn = async function (req, res) {
     req.session.isAuthenticate = true;
     req.session.admin = isUser.isAdmin;
     req.session.user = isUser;
+    console.log("locals............", req);
     req.flash("success", "SignIn Successfully");
 
     return res.redirect("/home");
   } catch (error) {
     req.session.isAuthenticate = false;
-    consle.log("user login error", error);
+    console.log("user login error", error);
     req.flash("error", "Something went wrong! unable to signIn");
     return res.json({
       redirectUrl: "/user/login",
@@ -107,10 +117,36 @@ async function userDelete(req, res) {
     res.redirect("/admin/manageuser");
   }
 }
+
+async function sendEmail(req, res) {
+  const { email } = req.body;
+  genratedOtp = generateOTP();
+  const transporter = nodemailer.createTransport({
+    // host: "live.smtp.mailtrap.io",
+    host: "live.smtp.mailtrap.io",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "api",
+      pass: "d8d654977b245c9ecc83c028b639a111",
+    },
+  });
+
+  const info = await transporter.sendMail({
+    // from: "info@mailtrap.com", // sender address
+    from: "mailtrap@demomailtrap.com", // sender address
+    // to: email, // list of receivers
+    to: "goyallucky2020@gmail.com", // list of receivers
+    subject: "Verifiction email", // Subject line
+    text: genratedOtp,
+    html: mailFormat(), // html body
+  });
+}
 module.exports = {
   userSignIn,
   userSignUp,
   getUsers,
   changeUserType,
   userDelete,
+  sendEmail,
 };
