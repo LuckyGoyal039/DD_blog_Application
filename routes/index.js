@@ -50,4 +50,9 @@ router.get("/admin/auditLogs", checkAdmin(), getAuditLogs);
 router.use("/user", userRoutes);
 
 router.use("/blog", blogRoutes);
+
+router.get("/test", (req, res) => {
+  const tagsData = ["html", "css", "js", "EJs", "node"];
+  res.render("test", {tagsData});
+});
 module.exports = router;

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - youtube.com/codingnepal -->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Add Tags Input Box | CodingNepal</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Unicons CDN Link for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://unicons.iconscout.com/release/v4.0.0/css/thinline.css"
+    />
+    <style>
+      /* Import Google Font - Poppins */
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+      ::selection {
+        color: #fff;
+        background: #5372f0;
+      }
+      .wrapper {
+        width: 496px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 18px 25px 20px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.06);
+      }
+      .wrapper :where(li, li i) {
+        display: flex;
+        align-items: center;
+      }
+
+      .wrapper .content {
+        margin: 10px 0;
+      }
+      .content p {
+        font-size: 15px;
+      }
+      .content ul {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 7px;
+        margin: 12px 0;
+        border-radius: 5px;
+        border: 1px solid #a6a6a6;
+      }
+      .content ul li {
+        color: #333;
+        margin: 4px 3px;
+        list-style: none;
+        border-radius: 5px;
+        background: #f2f2f2;
+        padding: 5px 8px 5px 10px;
+        border: 1px solid #e3e1e1;
+      }
+      .content ul li i {
+        height: 20px;
+        width: 20px;
+        color: #808080;
+        margin-left: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 50%;
+        background: #dfdfdf;
+        justify-content: center;
+      }
+      .content ul input {
+        flex: 1;
+        padding: 5px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="content">
+        <ul>
+          <input type="text" spellcheck="false" />
+        </ul>
+      </div>
+      <div class="details">
+        <button>Remove All</button>
+      </div>
+    </div>
+    <script>
+      const ul = document.querySelector("ul"),
+        input = document.querySelector("input"),
+        tagNumb = document.querySelector(".details span");
+
+      let maxTags = 10,
+        tags = [];
+      createTag();
+
+      function createTag() {
+        ul.querySelectorAll("li").forEach((li) => li.remove());
+        tags
+          .slice()
+          .reverse()
+          .forEach((tag) => {
+            let liTag = `<li>${tag} <i class="uit uit-multiply" onclick="remove(this, '${tag}')"></i></li>`;
+            ul.insertAdjacentHTML("afterbegin", liTag);
+          });
+      }
+
+      function remove(element, tag) {
+        let index = tags.indexOf(tag);
+        tags = [...tags.slice(0, index), ...tags.slice(index + 1)];
+        element.parentElement.remove();
+      }
+
+      function addTag(e) {
+        if (e.key === "Enter" || e.key === ",") {
+          let tag = e.target.value.trim();
+          if (tag.length > 0 && !tags.includes(tag)) {
+            let tagArray = tag
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean);
+            if (tags.length + tagArray.length <= 10) {
+              tagArray.forEach((tag) => {
+                tags.push(tag);
+                createTag();
+              });
+            }
+          }
+          e.target.value = "";
+        }
+      }
+
+      input.addEventListener("keyup", addTag);
+
+      const removeBtn = document.querySelector(".details button");
+      removeBtn.addEventListener("click", () => {
+        tags.length = 0;
+        ul.querySelectorAll("li").forEach((li) => li.remove());
+        countTags();
+      });
+    </script>
+  </body>
+</html>

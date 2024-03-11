@@ -7,7 +7,7 @@ function generateOTP() {
     upperCaseAlphabets: true,
     specialChars: false,
   };
-  otp = otpGenerator.generate(6, OTP_CONFIG);
+  otp = `${Math.floor(100000 + Math.random() * 900000)}`;
   return otp;
 }
 

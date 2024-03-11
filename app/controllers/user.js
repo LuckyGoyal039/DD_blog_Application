@@ -11,16 +11,20 @@ const { mailFormat, generateOTP } = require("./otpmailformat");
 
 const userSignUp = async function (req, res) {
   const { username, email, password, otp } = req.body;
+  console.log(req.body);
 
   const adminBool = req.session.admin && req.body?.userType === "admin";
   try {
     const isUser = await User.findOne({ where: { email: email } });
-    if (genratedOtp !== otp) {
-      req.flash("error", "Invalid OTP ");
+    console.log("hello......");
+    if (genratedOtp !== otp && !adminBool) {
+      console.log("Invalid OTP");
+      req.flash("error", "Invalid OTP");
       return res.redirect("/user/signup");
     }
     if (isUser) {
-      req.flash("error", "User already exit ");
+      console.log("User already exit");
+      req.flash("error", "User already exit");
       return res.redirect(`${req.originalUrl}`);
     }
     // saltRounds not working
@@ -32,6 +36,7 @@ const userSignUp = async function (req, res) {
       password: hashPassword,
       isAdmin: adminBool,
     });
+    console.log("user created successfully");
     req.session.isAuthenticate = true;
     req.session.admin = newUser.isAdmin;
     req.session.user = newUser;
@@ -40,6 +45,7 @@ const userSignUp = async function (req, res) {
   } catch (error) {
     req.session.isAuthenticate = false;
     console.log("Error during sign-up", error);
+    console.log(req.originalUrl);
     req.flash("error", "Unable to signup");
     return res.redirect(`${req.originalUrl}`);
   }
@@ -60,7 +66,6 @@ const userSignIn = async function (req, res) {
     req.session.isAuthenticate = true;
     req.session.admin = isUser.isAdmin;
     req.session.user = isUser;
-    console.log("locals............", req);
     req.flash("success", "SignIn Successfully");
 
     return res.redirect("/home");
@@ -136,10 +141,9 @@ async function sendEmail(req, res) {
     // from: "info@mailtrap.com", // sender address
     from: "mailtrap@demomailtrap.com", // sender address
     // to: email, // list of receivers
-    to: "goyallucky2020@gmail.com", // list of receivers
-    subject: "Verifiction email", // Subject line
-    text: genratedOtp,
-    html: mailFormat(), // html body
+    to: "goyallucky2020@gmail.com",
+    subject: "Verifiction email",
+    html: mailFormat(),
   });
 }
 module.exports = {
