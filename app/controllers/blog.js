@@ -236,6 +236,8 @@ async function fetchBlogData(filterQuery, page = 1, limit = 8) {
         tags: tagNames,
         likes: ele.likes,
         views: ele.views,
+        createdAt: ele.createdAt,
+        updatedAt: ele.updatedAt,
       };
     })
   );

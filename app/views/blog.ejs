@@ -30,6 +30,17 @@
         width: 100%;
         border-radius: 10px;
       }
+      .outerContainer{
+        padding: 30px 270px;
+        
+        @media (max-width:900px){
+          padding: 30px 25px;
+        }
+
+      }
+      .main-heading{
+        margin-bottom: 30px;
+      }
     </style>
   </head>
   <body>
@@ -39,8 +50,8 @@
     <%- include('message', {successMessage, errorMessage})%>
 
     <div class="d-flex justify-content-center">
-      <div style="padding: 30px 350px">
-        <div>
+      <div class="outerContainer">
+        <div class="main-heading">
           <h1><%=blogData.blogTitle%></h1>
         </div>
         <div class="imageContainer">
